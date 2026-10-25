@@ -26,7 +26,7 @@ func ReadConfig(appName string, args []string, config any) error {
 	}
 
 	t := reflect.TypeOf(config)
-	if t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
+	if t.Kind() != reflect.Pointer || t.Elem().Kind() != reflect.Struct {
 		return errors.New("config must be a pointer to struct")
 	}
 
@@ -34,7 +34,7 @@ func ReadConfig(appName string, args []string, config any) error {
 	configEnvName := strings.ToUpper(appName) + "_CONFIG_FILE"
 
 	flags := pflag.NewFlagSet("config", pflag.ContinueOnError)
-	flags.ParseErrorsWhitelist.UnknownFlags = true
+	flags.ParseErrorsAllowlist.UnknownFlags = true
 	flags.StringVar(&configFile, "config", defaultString(configEnvName, ""),
 		"")
 	// Dummy flag to turn off printing usage of this flag set
