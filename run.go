@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/pflag"
 	"go.uber.org/zap"
 
-	"github.com/outofforest/ioc/v2"
 	"github.com/outofforest/logger"
 	"github.com/outofforest/parallel"
 )
@@ -37,14 +36,7 @@ func New() Environment {
 
 // Environment boots up the application.
 type Environment struct {
-	containerBuilder func(c *ioc.Container)
-	flavours         []FlavourFunc
-}
-
-// WithContainerBuilder sets IoC builder.
-func (e Environment) WithContainerBuilder(containerBuilder func(c *ioc.Container)) Environment {
-	e.containerBuilder = containerBuilder
-	return e
+	flavours []FlavourFunc
 }
 
 // WithFlavour adds flavour to the environment.
@@ -54,7 +46,7 @@ func (e Environment) WithFlavour(flavourFunc FlavourFunc) Environment {
 }
 
 // Run runs an application inside configured environment.
-func (e Environment) Run(ctx context.Context, appName string, appFunc interface{}) {
+func (e Environment) Run(ctx context.Context, appName string, appFunc parallel.Task) {
 	log := logger.Get(ctx)
 	if log == nil {
 		log = logger.New(logger.ConfigureWithCLI(logger.DefaultConfig))
@@ -71,19 +63,7 @@ func (e Environment) Run(ctx context.Context, appName string, appFunc interface{
 				_ = log.Sync()
 			}()
 
-			return WithFlavours(ctx, e.flavours, func(ctx context.Context) error {
-				c := ioc.New()
-				c.Singleton(func() context.Context {
-					return ctx
-				})
-				if e.containerBuilder != nil {
-					e.containerBuilder(c)
-				}
-
-				var err error
-				c.Call(appFunc, &err)
-				return err
-			})
+			return WithFlavours(ctx, e.flavours, appFunc)
 		})
 		spawn("signals", parallel.Exit, func(ctx context.Context) error {
 			sigs := make(chan os.Signal, 1)
