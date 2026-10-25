@@ -3,7 +3,6 @@ module github.com/outofforest/run
 go 1.22
 
 require (
-	github.com/outofforest/ioc/v2 v2.5.2
 	github.com/outofforest/logger v0.5.5
 	github.com/outofforest/parallel v0.2.3
 	github.com/pkg/errors v0.9.1
